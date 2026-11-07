@@ -11,7 +11,7 @@
 <meta property="og:url" content="https://melvin0163.github.io/Portfolio/">
 <meta property="og:type" content="profile">
 <meta property="og:title" content="Melvin Immanuel Gregory · AI Engineer, ML Engineer & Data Scientist">
-<meta property="og:description" content="RAG & LLM systems, model evaluation and deep-learning forecasting. −81% LLM tokens · 94% routing accuracy · R² 0.85.">
+<meta property="og:description" content="RAG & LLM systems, model evaluation and deep-learning forecasting. −81% LLM tokens · 94% routing accuracy · −12% imputation error.">
 <meta property="og:image" content="https://melvin0163.github.io/Portfolio/assets/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="627">
@@ -551,12 +551,12 @@
       </article>
 
       <article class="card kpi rv" style="--c: var(--amber); --cs: var(--amber-soft)">
-        <div class="kpi-top"><span class="label">Forecast fit</span><span class="chip">GAN · BiLSTM</span></div>
-        <div class="val"><span data-count="0.85" data-dec="2">0.85</span><small>R²</small></div>
-        <p class="desc">7-day temperature forecast (task-specific GAN) on 76 years of ERA5 climate data for Chennai.</p>
-        <div class="viz">
-          <div class="gauge"><div class="mk" data-left="85"></div></div>
-          <div class="scale"><span>0.0</span><span>0.5</span><span>1.0</span></div>
+        <div class="kpi-top"><span class="label">Imputation error</span><span class="chip">WGAN-GP</span></div>
+        <div class="val"><span data-count="12" data-prefix="−">−12</span><small>%</small></div>
+        <p class="desc">Lower error filling gaps in 76 years of ERA5 climate data, with a shared WGAN-GP compared with a standard GAN.</p>
+        <div class="viz minibars">
+          <div class="mb"><span>GAN</span><div class="tr"><div class="fl" data-w="100" style="background:#cbd5e1"></div></div><b>0.318</b></div>
+          <div class="mb"><span>WGAN-GP</span><div class="tr"><div class="fl" data-w="88" style="background:var(--amber)"></div></div><b>0.280</b></div>
         </div>
       </article>
 
@@ -699,6 +699,7 @@
             <button type="button" role="tab" data-fig="0" aria-pressed="true"><b>1</b>Imputation</button>
             <button type="button" role="tab" data-fig="1" aria-pressed="false"><b>2</b>7-day forecast</button>
             <button type="button" role="tab" data-fig="2" aria-pressed="false"><b>3</b>Error by lead day</button>
+            <button type="button" role="tab" data-fig="3" aria-pressed="false"><b>4</b>vs. baselines</button>
           </div>
           <span class="demo-note" style="color:var(--teal); background:var(--teal-soft)">Real results · test period 2014–2025</span>
         </div>
@@ -706,9 +707,11 @@
           <figure class="gal-fig on"><picture><source srcset="assets/gan-shared_models_imputation_example.webp" type="image/webp"><img src="assets/gan-shared_models_imputation_example.png" alt="Held-out 30-day block: true temperature against GAN and WGAN-GP reconstructions at the missing points" width="1260" height="630" loading="lazy"></picture>
             <figcaption>A held-out 30-day block with values removed (red ✕). The <b>WGAN-GP</b> reconstruction tracks the true series more closely than the GAN, including across a 6-day gap.</figcaption></figure>
           <figure class="gal-fig"><picture><source srcset="assets/gan-gan_forecasting_example.webp" type="image/webp"><img src="assets/gan-gan_forecasting_example.png" alt="30 days of context and the 7-day GAN temperature forecast against the true future" width="1260" height="560" loading="lazy"></picture>
-            <figcaption>One of 596 test windows: 30 days of context, then the 7-day forecast against what actually happened. It gets the level right but misses the day-to-day swings. That's where better models, or a baseline comparison, matter.</figcaption></figure>
+            <figcaption>One of 596 test windows: 30 days of context, then the 7-day forecast against what actually happened. It gets the level right but misses the day-to-day swings.</figcaption></figure>
           <figure class="gal-fig"><picture><source srcset="assets/gan-forecast_rmse_by_lead_day.webp" type="image/webp"><img src="assets/gan-forecast_rmse_by_lead_day.png" alt="Forecast RMSE by lead day 1 to 7 for the Simple GAN, Shared GAN and Shared WGAN-GP" width="1120" height="560" loading="lazy"></picture>
-            <figcaption>Error grows with the forecast horizon for every model. The task-specific <b>Simple GAN</b> stays lowest at every lead day (0.61 → 1.08 °C RMSE).</figcaption></figure>
+            <figcaption>Error grows with the forecast horizon for every model. The task-specific <b>Simple GAN</b> stays lowest of the three GANs at every lead day (0.61 → 1.08 °C RMSE).</figcaption></figure>
+          <figure class="gal-fig"><picture><source srcset="assets/gan-baselines_vs_gan.webp" type="image/webp"><img src="assets/gan-baselines_vs_gan.png" alt="RMSE and R squared of the three GAN models and five non-GAN baselines on 596 test windows" width="1820" height="644" loading="lazy"></picture>
+            <figcaption>The GANs (teal) against five classical baselines (grey) on the same 596 test windows. <b>Ridge regression and ARIMA match the best GAN</b> (RMSE 0.92–0.93 °C), and a plain seasonal average already reaches R² 0.80. That's why I report skill over climatology, not R² alone.</figcaption></figure>
         </div>
       </div>
 
@@ -722,8 +725,9 @@
               <li><strong>Three designs with BiLSTM generators:</strong> a Shared GAN (GAIN-style discriminator), a Shared <strong>WGAN-GP</strong> (Wasserstein critic with gradient penalty) and a Simple GAN trained per task.</li>
               <li><strong>A leakage-safe setup:</strong> a chronological split into 30-day blocks (train 1950–2003, validation to 2014, test 2014–2025), scaling fitted on training data only, and 18.5% of values masked (random days plus 3–10-day gaps) with a fixed seed.</li>
               <li><strong>Evaluation:</strong> imputation error at the removed points, 7-day forecasts on 596 test windows (RMSE, MAE, R², error by lead day), plus parameters and training time.</li>
+              <li><strong>Five non-GAN baselines</strong> on the same windows (persistence, climatology, anomaly persistence, ARIMA, ridge regression), with a <strong>skill score against climatology</strong>.</li>
             </ul></div>
-          <div class="callout" style="border-left-color: var(--teal)"><b>Finding.</b> Sharing pays off for imputation and compute. The shared WGAN-GP had the lowest imputation error (12% below the GAN), and the shared models need 28% fewer generator parameters and train up to 4× faster. It costs forecasting accuracy, though: the task-specific GAN forecasts best (R² 0.85 against 0.71).</div>
+          <div class="callout" style="border-left-color: var(--teal)"><b>Finding.</b> Sharing pays off for imputation and compute. The shared WGAN-GP had the lowest imputation error (12% below the GAN), and the shared models need 28% fewer generator parameters and train up to 4× faster. For forecasting, the task-specific GAN (R² 0.85) <b>matched but did not beat</b> ARIMA and ridge regression, and the shared GANs fell below a seasonal average. The lesson I took: benchmark against simple baselines before claiming a deep model helps.</div>
         </div>
 
         <div class="panel" id="ganBench">
@@ -758,7 +762,7 @@
             <div class="bench-top"><span>Training time</span><span class="delta">fastest</span></div>
             <div class="bv-wrap"><span class="bv">11.9</span><small>min</small></div><div class="tr" style="margin-top:6px"><div class="fl"></div></div>
           </div>
-          <p class="fine">One run, seed 42, on CPU. The Simple GAN uses a separate generator for each task, so its parameters and time cover both. Next step: adding non-GAN baselines (persistence, climatology, ARIMA).</p>
+          <p class="fine">One run, seed 42, on CPU. The Simple GAN uses a separate generator for each task, so its parameters and time cover both. Against five classical baselines, ridge regression scored R² 0.86 and ARIMA 0.86 on the same test windows (tab 4).</p>
         </div>
       </div>
     </article>
