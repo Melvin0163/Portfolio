@@ -276,6 +276,14 @@
   .fig figcaption b { color: var(--ink-2); }
   @media (max-width: 760px) { .node { white-space: normal; } }
 
+  .gal { margin-top: 26px; }
+  .gal-frame { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .gal-fig { margin: 0; display: none; }
+  .gal-fig.on { display: block; }
+  .gal-fig img { width: 100%; height: auto; border-radius: 6px; }
+  .gal-fig figcaption { font-size: 13px; color: var(--ink-3); margin-top: 10px; line-height: 1.55; }
+  .gal-fig figcaption b { color: var(--ink-2); }
+
   /* pipeline */
   .pipe { margin-top: 28px; padding-top: 24px; border-top: 1px dashed var(--line); }
   .lane + .lane { margin-top: 18px; }
@@ -545,7 +553,7 @@
       <article class="card kpi rv" style="--c: var(--amber); --cs: var(--amber-soft)">
         <div class="kpi-top"><span class="label">Forecast fit</span><span class="chip">GAN · BiLSTM</span></div>
         <div class="val"><span data-count="0.85" data-dec="2">0.85</span><small>R²</small></div>
-        <p class="desc">7-day temperature forecast on 76 years of real climate data.</p>
+        <p class="desc">7-day temperature forecast (task-specific GAN) on 76 years of ERA5 climate data for Chennai.</p>
         <div class="viz">
           <div class="gauge"><div class="mk" data-left="85"></div></div>
           <div class="scale"><span>0.0</span><span>0.5</span><span>1.0</span></div>
@@ -677,59 +685,80 @@
       <div class="p-head">
         <div>
           <div class="p-kicker"><span class="chip" style="--c: var(--teal); --cs: var(--teal-soft)">Deep learning · Time series</span><span class="label">Project 02</span></div>
-          <h3 id="p2">Adversarial time-series imputation &amp; weather forecasting with GANs</h3>
-          <div class="tags"><span class="tag">Python</span><span class="tag">GAN</span><span class="tag">Shared GAN</span><span class="tag">WGAN-GP</span><span class="tag">BiLSTM</span><span class="tag">Pandas</span><span class="tag">NumPy</span></div>
+          <h3 id="p2">Adversarial forecasting: one shared GAN, or one GAN per task?</h3>
+          <div class="tags"><span class="tag">Python</span><span class="tag">TensorFlow</span><span class="tag">GAN (GAIN-style)</span><span class="tag">Shared GAN</span><span class="tag">WGAN-GP</span><span class="tag">BiLSTM</span><span class="tag">ERA5-Land</span><span class="tag">Google Earth Engine</span></div>
         </div>
         <a class="btn btn-line btn-sm" href="https://github.com/Melvin0163/Adversarial-Forecasting-A-GAN-Based-Framework-for-Time-Series-Imputation-and-Weather-Prediction" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
           View code</a>
       </div>
 
-      <div class="ts panel">
+      <div class="panel gal" id="ganGal">
         <div class="ts-controls">
-          <div class="steps" role="group" aria-label="Pipeline stage">
-            <button type="button" data-stage="0" aria-pressed="true"><b>1</b>Raw data with gaps</button>
-            <button type="button" data-stage="1" aria-pressed="false"><b>2</b>GAN imputation</button>
-            <button type="button" data-stage="2" aria-pressed="false"><b>3</b>7-day forecast</button>
+          <div class="steps" role="tablist" aria-label="Result figures">
+            <button type="button" role="tab" data-fig="0" aria-pressed="true"><b>1</b>Imputation</button>
+            <button type="button" role="tab" data-fig="1" aria-pressed="false"><b>2</b>7-day forecast</button>
+            <button type="button" role="tab" data-fig="2" aria-pressed="false"><b>3</b>Error by lead day</button>
           </div>
-          <span class="demo-note">⚠ Illustrative simulation · synthetic data</span>
+          <span class="demo-note" style="color:var(--teal); background:var(--teal-soft)">Real results · test period 2014–2025</span>
         </div>
-        <div class="chart-wrap">
-          <canvas id="tsChart" aria-label="Interactive chart showing a temperature series with missing values, imputed values and a 7-day forecast" role="img"></canvas>
-          <div class="tip" id="tsTip"></div>
+        <div class="gal-frame">
+          <figure class="gal-fig on"><picture><source srcset="assets/gan-shared_models_imputation_example.webp" type="image/webp"><img src="assets/gan-shared_models_imputation_example.png" alt="Held-out 30-day block: true temperature against GAN and WGAN-GP reconstructions at the missing points" width="1260" height="630" loading="lazy"></picture>
+            <figcaption>A held-out 30-day block with values removed (red ✕). The <b>WGAN-GP</b> reconstruction tracks the true series more closely than the GAN, including across a 6-day gap.</figcaption></figure>
+          <figure class="gal-fig"><picture><source srcset="assets/gan-gan_forecasting_example.webp" type="image/webp"><img src="assets/gan-gan_forecasting_example.png" alt="30 days of context and the 7-day GAN temperature forecast against the true future" width="1260" height="560" loading="lazy"></picture>
+            <figcaption>One of 596 test windows: 30 days of context, then the 7-day forecast against what actually happened. It gets the level right but misses the day-to-day swings. That's where better models, or a baseline comparison, matter.</figcaption></figure>
+          <figure class="gal-fig"><picture><source srcset="assets/gan-forecast_rmse_by_lead_day.webp" type="image/webp"><img src="assets/gan-forecast_rmse_by_lead_day.png" alt="Forecast RMSE by lead day 1 to 7 for the Simple GAN, Shared GAN and Shared WGAN-GP" width="1120" height="560" loading="lazy"></picture>
+            <figcaption>Error grows with the forecast horizon for every model. The task-specific <b>Simple GAN</b> stays lowest at every lead day (0.61 → 1.08 °C RMSE).</figcaption></figure>
         </div>
-        <div class="legend">
-          <span><i style="background:#64748b"></i>Observed</span>
-          <span><i class="box" style="background:#ffe1e8"></i>Missing</span>
-          <span><i style="background:var(--violet)"></i>Imputed</span>
-          <span><i style="background:var(--blue)"></i>Forecast</span>
-          <span><i class="box" style="background:#dbe7ff"></i>Uncertainty band</span>
-        </div>
-        <div class="ts-stats" id="tsStats"></div>
       </div>
 
       <div class="p-grid">
         <div>
-          <div class="story"><h4 class="label">Problem</h4>
-            <p>Real-world climate records have gaps. Forecasting models need complete, well-behaved sequences, and naive gap-filling distorts the very patterns the model is trying to learn.</p></div>
+          <div class="story"><h4 class="label">Research question</h4>
+            <p>Weather records have gaps, and forecasts need complete history. Can <strong>one shared GAN generator</strong> fill the gaps <em>and</em> forecast, and is that more efficient than training a <strong>separate GAN for each task</strong>? I judged "efficient" on accuracy, parameter count and training time.</p></div>
           <div class="story"><h4 class="label">What I built</h4>
             <ul class="bul" style="--c: var(--teal)">
-              <li><strong>GAN, Shared GAN and WGAN-GP</strong> architectures, each integrated with a <strong>BiLSTM</strong>, for time-series imputation and weather forecasting.</li>
-              <li>Preprocessing for <strong>76 years of climate data</strong>: normalisation, simulated missing values for controlled testing, and a <strong>chronological train/val/test split</strong> to prevent look-ahead leakage.</li>
-              <li>Evaluation with <strong>RMSE, MAE and R²</strong> on held-out future periods.</li>
+              <li><strong>Data:</strong> 27,757 days (1950–2025) of ERA5-Land reanalysis for Chennai, with 6 variables, extracted through <strong>Google Earth Engine</strong>.</li>
+              <li><strong>Three designs with BiLSTM generators:</strong> a Shared GAN (GAIN-style discriminator), a Shared <strong>WGAN-GP</strong> (Wasserstein critic with gradient penalty) and a Simple GAN trained per task.</li>
+              <li><strong>A leakage-safe setup:</strong> a chronological split into 30-day blocks (train 1950–2003, validation to 2014, test 2014–2025), scaling fitted on training data only, and 18.5% of values masked (random days plus 3–10-day gaps) with a fixed seed.</li>
+              <li><strong>Evaluation:</strong> imputation error at the removed points, 7-day forecasts on 596 test windows (RMSE, MAE, R², error by lead day), plus parameters and training time.</li>
             </ul></div>
+          <div class="callout" style="border-left-color: var(--teal)"><b>Finding.</b> Sharing pays off for imputation and compute. The shared WGAN-GP had the lowest imputation error (12% below the GAN), and the shared models need 28% fewer generator parameters and train up to 4× faster. It costs forecasting accuracy, though: the task-specific GAN forecasts best (R² 0.85 against 0.71).</div>
         </div>
-        <div class="panel">
-          <span class="label">Measured result</span>
-          <div class="r2" style="margin-top:14px"><b>0.85</b><span>R² · 7-day temperature forecast</span></div>
-          <div class="gauge" style="margin-top:18px"><div class="mk" data-left="85"></div></div>
-          <div class="scale"><span>0.0</span><span>0.5</span><span>1.0</span></div>
-          <div class="facts">
-            <div><b>76 yrs</b><span>real climate history</span></div>
-            <div><b>3</b><span>metrics · RMSE · MAE · R²</span></div>
-            <div><b>3</b><span>GAN variants · GAN · Shared GAN · WGAN-GP</span></div>
-            <div><b>Time-based</b><span>train / val / test split</span></div>
+
+        <div class="panel" id="ganBench">
+          <div class="panel-head">
+            <span class="label">Compare models</span>
+            <div class="seg" role="group" aria-label="Model">
+              <button type="button" data-m="0" aria-pressed="true">Simple GAN</button>
+              <button type="button" data-m="1" aria-pressed="false">WGAN-GP</button>
+              <button type="button" data-m="2" aria-pressed="false">Shared GAN</button>
+            </div>
           </div>
+          <div class="bench-group">Forecasting · 7 days ahead</div>
+          <div class="bench c" data-v="0.85,0.71,0.48" data-max="1" data-dec="2" data-best="0">
+            <div class="bench-top"><span>R² (higher is better)</span><span class="delta">best</span></div>
+            <div class="bv-wrap"><span class="bv">0.85</span><small>R²</small></div><div class="tr" style="margin-top:6px"><div class="fl"></div></div>
+          </div>
+          <div class="bench c" data-v="0.93,1.32,1.76" data-max="2" data-dec="2" data-best="0">
+            <div class="bench-top"><span>RMSE (lower is better)</span><span class="delta">best</span></div>
+            <div class="bv-wrap"><span class="bv">0.93</span><small>°C</small></div><div class="tr" style="margin-top:6px"><div class="fl"></div></div>
+          </div>
+          <div class="bench-group">Imputation · temperature</div>
+          <div class="bench c" data-v="0.318,0.280,0.318" data-max="0.4" data-dec="3" data-best="1">
+            <div class="bench-top"><span>RMSE, scaled (lower is better)</span><span class="delta">best</span></div>
+            <div class="bv-wrap"><span class="bv">0.318</span><small>z-units</small></div><div class="tr" style="margin-top:6px"><div class="fl"></div></div>
+          </div>
+          <div class="bench-group">Cost · both tasks</div>
+          <div class="bench c" data-v="203725,146886,146886" data-max="210000" data-best="1,2">
+            <div class="bench-top"><span>Generator parameters</span><span class="delta">fewest</span></div>
+            <div class="bv-wrap"><span class="bv">203,725</span><small>params</small></div><div class="tr" style="margin-top:6px"><div class="fl"></div></div>
+          </div>
+          <div class="bench c" data-v="11.9,7.8,2.9" data-max="12" data-dec="1" data-best="2">
+            <div class="bench-top"><span>Training time</span><span class="delta">fastest</span></div>
+            <div class="bv-wrap"><span class="bv">11.9</span><small>min</small></div><div class="tr" style="margin-top:6px"><div class="fl"></div></div>
+          </div>
+          <p class="fine">One run, seed 42, on CPU. The Simple GAN uses a separate generator for each task, so its parameters and time cover both. Next step: adding non-GAN baselines (persistence, climatology, ARIMA).</p>
         </div>
       </div>
     </article>
@@ -1032,104 +1061,34 @@
     });
   })();
 
-  /* ---------- time-series demo ---------- */
+  /* ---------- GAN figures + model comparison ---------- */
   (function () {
-    var cv = document.getElementById('tsChart'), ctx = cv.getContext('2d'), tip = document.getElementById('tsTip'), statsEl = document.getElementById('tsStats');
-    var rnd = mulberry32(11), N = 140, HZ = 7;
-    function base(i) { return 27 + 3.2 * Math.sin(i / 11) + 1.3 * Math.sin(i / 3.7 + 1); }
-    var truth = []; for (var i = 0; i < N; i++) truth.push(base(i) + (rnd() - .5) * 1.5);
-    var gaps = [[16, 24], [47, 52], [78, 89], [110, 116]];
-    function miss(i) { for (var g = 0; g < gaps.length; g++) if (i >= gaps[g][0] && i <= gaps[g][1]) return true; return false; }
-    var imp = truth.map(function (v, i) { return miss(i) ? v + (rnd() - .5) * .8 : null; });
-    var fc = []; for (var j = 1; j <= HZ; j++) fc.push({ i: N - 1 + j, v: base(N - 1 + j), b: .55 + .24 * j });
-    var nMiss = truth.filter(function (_, i) { return miss(i); }).length;
-    var lo = 1e9, hi = -1e9; truth.concat(fc.map(function (f) { return f.v + f.b; }), fc.map(function (f) { return f.v - f.b; })).forEach(function (v) { lo = Math.min(lo, v); hi = Math.max(hi, v); });
-    lo = Math.floor(lo) - 1; hi = Math.ceil(hi) + 1;
-    var W, H, pad = { l: 42, r: 14, t: 18, b: 30 }, stage = 0, prog = 1, hover = -1, raf;
-    function X(i) { return pad.l + i / (N - 1 + HZ) * (W - pad.l - pad.r); }
-    function Y(v) { return pad.t + (1 - (v - lo) / (hi - lo)) * (H - pad.t - pad.b); }
-    function size() { var r = cv.getBoundingClientRect(), d = DPR(); W = r.width; H = r.height; cv.width = W * d; cv.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0); draw(); }
-    function draw() {
-      ctx.clearRect(0, 0, W, H);
-      ctx.font = '500 11px "JetBrains Mono", monospace'; ctx.textBaseline = 'middle';
-      for (var v = Math.ceil(lo); v <= hi; v += 2) { var y = Y(v); ctx.strokeStyle = '#eef1f6'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke(); ctx.fillStyle = '#94a3b8'; ctx.fillText(v + '°', 8, y); }
-      ctx.textAlign = 'center';
-      [0, 35, 70, 105, 139].forEach(function (d) { ctx.fillStyle = '#94a3b8'; ctx.fillText('d' + d, X(d), H - 12); });
-      ctx.textAlign = 'left';
-      gaps.forEach(function (g) { var x0 = X(g[0] - .5), x1 = X(g[1] + .5); ctx.fillStyle = stage >= 1 ? 'rgba(124,58,237,.06)' : 'rgba(225,29,72,.10)'; ctx.fillRect(x0, pad.t, x1 - x0, H - pad.t - pad.b);
-        if (stage === 0 && x1 - x0 > 26) { ctx.fillStyle = '#e11d48'; ctx.textAlign = 'center'; ctx.fillText('NaN', (x0 + x1) / 2, pad.t + 10); ctx.textAlign = 'left'; } });
-      // observed
-      ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1.6; ctx.lineJoin = 'round'; ctx.beginPath(); var pen = false;
-      for (var i = 0; i < N; i++) { if (miss(i)) { pen = false; continue; } var x = X(i), y = Y(truth[i]); if (!pen) { ctx.moveTo(x, y); pen = true; } else ctx.lineTo(x, y); }
-      ctx.stroke();
-      // imputed
-      if (stage >= 1) {
-        var p1 = stage === 1 ? prog : 1;
-        gaps.forEach(function (g) {
-          var a = g[0] - 1, b = g[1] + 1, last = a + (b - a) * p1;
-          ctx.strokeStyle = '#7c3aed'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(X(a), Y(truth[a]));
-          for (var i = g[0]; i <= Math.min(b, Math.floor(last)); i++) ctx.lineTo(X(i), Y(i === b ? truth[b] : imp[i]));
-          ctx.stroke();
-          ctx.fillStyle = '#7c3aed'; for (i = g[0]; i <= Math.min(g[1], Math.floor(last)); i++) { ctx.beginPath(); ctx.arc(X(i), Y(imp[i]), 2.4, 0, 6.283); ctx.fill(); }
-        });
-      }
-      // forecast
-      if (stage >= 2) {
-        var p2 = stage === 2 ? prog : 1, k = Math.max(1, Math.ceil(p2 * HZ));
-        var xn = X(N - 1);
-        ctx.setLineDash([4, 4]); ctx.strokeStyle = '#cbd5e1'; ctx.beginPath(); ctx.moveTo(xn, pad.t); ctx.lineTo(xn, H - pad.b); ctx.stroke(); ctx.setLineDash([]);
-        ctx.fillStyle = '#64748b'; ctx.fillText('today', xn - 40, pad.t + 10);
-        ctx.fillStyle = 'rgba(37,99,235,.14)'; ctx.beginPath(); ctx.moveTo(xn, Y(truth[N - 1]));
-        for (var q = 0; q < k; q++) ctx.lineTo(X(fc[q].i), Y(fc[q].v + fc[q].b));
-        for (q = k - 1; q >= 0; q--) ctx.lineTo(X(fc[q].i), Y(fc[q].v - fc[q].b));
-        ctx.closePath(); ctx.fill();
-        ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2.4; ctx.setLineDash([6, 4]); ctx.beginPath(); ctx.moveTo(xn, Y(truth[N - 1]));
-        for (q = 0; q < k; q++) ctx.lineTo(X(fc[q].i), Y(fc[q].v)); ctx.stroke(); ctx.setLineDash([]);
-        ctx.fillStyle = '#2563eb'; for (q = 0; q < k; q++) { ctx.beginPath(); ctx.arc(X(fc[q].i), Y(fc[q].v), 2.6, 0, 6.283); ctx.fill(); }
-      }
-      // hover
-      if (hover >= 0) {
-        var hv = valueAt(hover);
-        if (hv) { var hx = X(hover); ctx.strokeStyle = 'rgba(15,23,42,.25)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(hx, pad.t); ctx.lineTo(hx, H - pad.b); ctx.stroke();
-          if (hv.v != null) { ctx.fillStyle = '#fff'; ctx.strokeStyle = hv.c; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(hx, Y(hv.v), 4.5, 0, 6.283); ctx.fill(); ctx.stroke(); } }
-      }
+    var tabs = document.querySelectorAll('#ganGal [data-fig]'), figs = document.querySelectorAll('#ganGal .gal-fig');
+    tabs.forEach(function (t) { t.addEventListener('click', function () {
+      tabs.forEach(function (x) { x.setAttribute('aria-pressed', x === t); });
+      figs.forEach(function (f, i) { f.classList.toggle('on', i === +t.dataset.fig); });
+    }); });
+    var panel = document.getElementById('ganBench'), btns = panel.querySelectorAll('[data-m]'), rows = [].slice.call(panel.querySelectorAll('.bench.c')), raf;
+    rows.forEach(function (r) { r._v = r.dataset.v.split(',').map(Number); r._cur = r._v[0]; r._best = r.dataset.best.split(',').map(Number); });
+    function fmt(v, dec) { return dec ? v.toFixed(dec) : Math.round(v).toLocaleString('en-US'); }
+    function set(m, instant) {
+      btns.forEach(function (b) { b.setAttribute('aria-pressed', +b.dataset.m === m); });
+      var from = rows.map(function (r) { return r._cur; }), t0 = null;
+      rows.forEach(function (r) {
+        var best = r._best.indexOf(m) >= 0, fl = r.querySelector('.fl');
+        fl.style.width = (r._v[m] / +r.dataset.max * 100) + '%';
+        fl.style.background = best ? 'var(--teal)' : '#94a3b8';
+        r.querySelector('.delta').classList.toggle('show', best);
+      });
+      cancelAnimationFrame(raf);
+      (function step(ts) {
+        if (!t0) t0 = ts; var k = (REDUCED || instant) ? 1 : Math.min(1, (ts - t0) / 700), e = 1 - Math.pow(1 - k, 3);
+        rows.forEach(function (r, i) { r._cur = from[i] + (r._v[m] - from[i]) * e; r.querySelector('.bv').textContent = fmt(r._cur, +(r.dataset.dec || 0)); });
+        if (k < 1) raf = requestAnimationFrame(step);
+      })(performance.now());
     }
-    function valueAt(i) {
-      if (i < N) { if (miss(i)) return stage >= 1 ? { v: imp[i], t: 'imputed', c: '#7c3aed' } : { v: null, t: 'missing (NaN)', c: '#e11d48' }; return { v: truth[i], t: 'observed', c: '#64748b' }; }
-      if (stage >= 2 && i - N < HZ) { var f = fc[i - N]; return { v: f.v, t: 'forecast ±' + f.b.toFixed(1), c: '#2563eb' }; }
-      return null;
-    }
-    function stats() {
-      var s = [
-        [[N - nMiss, 'observed points'], [nMiss + ' · ' + (nMiss / N * 100).toFixed(0) + '%', 'missing values'], ['—', 'forecast horizon']],
-        [[N - nMiss, 'observed points'], [nMiss + ' → 0', 'missing after imputation'], ['—', 'forecast horizon']],
-        [[N, 'complete series'], ['0', 'missing values'], ['7 days', 'forecast horizon']]
-      ][stage];
-      statsEl.innerHTML = s.map(function (x) { return '<div><b>' + x[0] + '</b><span>' + x[1] + '</span></div>'; }).join('');
-    }
-    function setStage(s) {
-      stage = s; document.querySelectorAll('.steps button').forEach(function (b) { b.setAttribute('aria-pressed', +b.dataset.stage === s); });
-      stats(); cancelAnimationFrame(raf);
-      if (REDUCED || s === 0) { prog = 1; draw(); return; }
-      var t0 = null; prog = 0;
-      (function step(ts) { if (!t0) t0 = ts; prog = Math.min(1, (ts - t0) / 1100); draw(); if (prog < 1) raf = requestAnimationFrame(step); })(performance.now());
-    }
-    document.querySelectorAll('.steps button').forEach(function (b) { b.addEventListener('click', function () { auto = false; setStage(+b.dataset.stage); }); });
-    cv.addEventListener('pointermove', function (e) {
-      var r = cv.getBoundingClientRect(), x = e.clientX - r.left;
-      var i = Math.round((x - pad.l) / (W - pad.l - pad.r) * (N - 1 + HZ));
-      if (i < 0 || i > N - 1 + HZ) { hover = -1; tip.style.opacity = 0; draw(); return; }
-      var hv = valueAt(i); hover = hv ? i : -1; draw();
-      if (!hv) { tip.style.opacity = 0; return; }
-      tip.textContent = 'day ' + i + ' · ' + (hv.v != null ? hv.v.toFixed(1) + '°C' : '—') + ' · ' + hv.t;
-      tip.style.left = Math.max(70, Math.min(W - 70, X(i))) + 'px'; tip.style.top = (hv.v != null ? Y(hv.v) : pad.t + 20) + 'px'; tip.style.opacity = 1;
-    });
-    cv.addEventListener('pointerleave', function () { hover = -1; tip.style.opacity = 0; draw(); });
-    if ('ResizeObserver' in window) new ResizeObserver(size).observe(cv); else addEventListener('resize', size);
-    size(); stats();
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
-    var auto = true;
-    onView(cv, function () { if (REDUCED) { setStage(2); return; } setTimeout(function () { if (auto) setStage(1); }, 900); setTimeout(function () { if (auto) setStage(2); }, 2600); }, 0.5);
+    set(0, true);
+    btns.forEach(function (b) { b.addEventListener('click', function () { set(+b.dataset.m); }); });
   })();
 
   /* ---------- timeline ---------- */
